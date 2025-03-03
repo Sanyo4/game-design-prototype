@@ -764,201 +764,199 @@ class KuantumKitchen:
                 print("Invalid command.")
                 input("Press ENTER to continue...")
 
-            def run_execution_phase(self):
-                self.current_phase = "Execution"
+    def run_execution_phase(self):
+        self.current_phase = "Execution"
 
-                while True:
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    print(self.get_status())
+        while True:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(self.get_status())
 
-                    print("\n===== ACTIVE ORDERS =====")
-                    if not self.active_orders:
-                        print("No active orders. All orders have been prepared!")
-                        input("Press ENTER to continue to Delivery Phase...")
-                        return True
-                    else:
-                        for i, order in enumerate(self.active_orders):
-                            print(f"[{i + 1}] {order}")
+            print("\n===== ACTIVE ORDERS =====")
+            if not self.active_orders:
+                print("No active orders. All orders have been prepared!")
+                input("Press ENTER to continue to Delivery Phase...")
+                return True
+            else:
+                for i, order in enumerate(self.active_orders):
+                    print(f"[{i + 1}] {order}")
 
-                    print("\n===== TIMELINES =====")
-                    for timeline, orders in sorted(self.timelines.items()):
-                        if orders:
-                            order_ids = [str(order.id) for order in orders]
-                            print(f"Timeline {timeline}: Orders #{', #'.join(order_ids)}")
+            print("\n===== TIMELINES =====")
+            for timeline, orders in sorted(self.timelines.items()):
+                if orders:
+                    order_ids = [str(order.id) for order in orders]
+                    print(f"Timeline {timeline}: Orders #{', #'.join(order_ids)}")
 
-                    print("\n===== EXECUTION PHASE COMMANDS =====")
-                    print("[p#] Prepare order # (e.g., p1)")
-                    print("[v#] View order details # (e.g., v1)")
-                    print("[t] Update time (advances time by 1 unit)")
-                    print("[n] Proceed to Delivery Phase")
-                    print("[q] Quit game")
+            print("\n===== EXECUTION PHASE COMMANDS =====")
+            print("[p#] Prepare order # (e.g., p1)")
+            print("[v#] View order details # (e.g., v1)")
+            print("[t] Update time (advances time by 1 unit)")
+            print("[n] Proceed to Delivery Phase")
+            print("[q] Quit game")
 
-                    command = input("\nEnter command: ").strip().lower()
+            command = input("\nEnter command: ").strip().lower()
 
-                    if command == 'q':
-                        if input("Are you sure you want to quit? (y/n): ").lower() == 'y':
-                            return False
-                    elif command == 'n':
-                        ready_to_proceed = True
-                        for order in self.active_orders:
-                            if order.state == OrderState.SUPERPOSITION:
-                                ready_to_proceed = False
-                                break
+            if command == 'q':
+                if input("Are you sure you want to quit? (y/n): ").lower() == 'y':
+                    return False
+            elif command == 'n':
+                ready_to_proceed = True
+                for order in self.active_orders:
+                    if order.state == OrderState.SUPERPOSITION:
+                        ready_to_proceed = False
+                        break
 
-                        if ready_to_proceed:
-                            return True
-                        else:
-                            print("You must prepare all orders before proceeding.")
-                            input("Press ENTER to continue...")
-                    elif command == 't':
-                        if self.update_time():
-                            input("Press ENTER to continue...")
-                    elif command.startswith('p'):
-                        try:
-                            order_idx = int(command[1:]) - 1
-                            success, message = self.prepare_order(order_idx)
-                            print(message)
-                            input("Press ENTER to continue...")
-                        except (ValueError, IndexError):
-                            print("Invalid command format. Use p# to prepare an order.")
-                            input("Press ENTER to continue...")
-                    elif command.startswith('v'):
-                        try:
-                            order_idx = int(command[1:]) - 1
-                            if 0 <= order_idx < len(self.active_orders):
-                                print("\n" + self.active_orders[order_idx].get_details())
-                            else:
-                                print("Invalid order index.")
-                            input("Press ENTER to continue...")
-                        except (ValueError, IndexError):
-                            print("Invalid command format. Use v# to view an order.")
-                            input("Press ENTER to continue...")
-                    else:
-                        print("Invalid command.")
-                        input("Press ENTER to continue...")
-
-            def run_delivery_phase(self):
-                self.current_phase = "Delivery"
-
-                while True:
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    print(self.get_status())
-
-                    print("\n===== ACTIVE ORDERS =====")
-                    if not self.active_orders:
-                        print("No active orders. All orders have been delivered!")
-                        input("Press ENTER to continue to the next day...")
-                        return True
-                    else:
-                        for i, order in enumerate(self.active_orders):
-                            print(f"[{i + 1}] {order}")
-
-                    print("\n===== TIMELINES =====")
-                    for timeline, orders in sorted(self.timelines.items()):
-                        if orders:
-                            order_ids = [str(order.id) for order in orders]
-                            print(f"Timeline {timeline}: Orders #{', #'.join(order_ids)}")
-
-                    print("\n===== DELIVERY PHASE COMMANDS =====")
-                    print("[d#] Deliver order # (e.g., d1)")
-                    print("[v#] View order details # (e.g., v1)")
-                    print("[n] End day and proceed to next day")
-                    print("[q] Quit game")
-
-                    command = input("\nEnter command: ").strip().lower()
-
-                    if command == 'q':
-                        if input("Are you sure you want to quit? (y/n): ").lower() == 'y':
-                            return False
-                    elif command == 'n':
-                        if self.active_orders:
-                            if input(
-                                    "You still have active orders. Are you sure you want to end the day? (y/n): ").lower() == 'y':
-                                # Failed delivery penalty
-                                for order in self.active_orders:
-                                    self.customer_satisfaction = max(0, self.customer_satisfaction - 3)
-
-                                self.active_orders = []
-                                self.timelines = defaultdict(list)
-                                return True
-                        else:
-                            return True
-                    elif command.startswith('d'):
-                        try:
-                            order_idx = int(command[1:]) - 1
-                            success, message = self.deliver_order(order_idx)
-                            print(message)
-                            input("Press ENTER to continue...")
-                        except (ValueError, IndexError):
-                            print("Invalid command format. Use d# to deliver an order.")
-                            input("Press ENTER to continue...")
-                    elif command.startswith('v'):
-                        try:
-                            order_idx = int(command[1:]) - 1
-                            if 0 <= order_idx < len(self.active_orders):
-                                print("\n" + self.active_orders[order_idx].get_details())
-                            else:
-                                print("Invalid order index.")
-                            input("Press ENTER to continue...")
-                        except (ValueError, IndexError):
-                            print("Invalid command format. Use v# to view an order.")
-                            input("Press ENTER to continue...")
-                    else:
-                        print("Invalid command.")
-                        input("Press ENTER to continue...")
-
-            def show_game_summary(self):
-                os.system('cls' if os.name == 'nt' else 'clear')
-                print("\n===== KUANTUM KITCHEN SUMMARY =====")
-                print(f"Days Survived: {self.day}")
-                print(f"Final Score: {self.score}")
-                print(f"Customer Satisfaction: {self.customer_satisfaction}%")
-                print(f"Reality Stability: {self.reality_stability}%")
-                print(f"Orders Completed: {len(self.completed_orders)}")
-                print(f"Orders Failed: {len(self.failed_orders)}")
-
-                print("\nTop 5 Best Orders:")
-                best_orders = sorted(self.completed_orders,
-                                     key=lambda o: o.actual_outcome["satisfaction"] if o.actual_outcome else 0,
-                                     reverse=True)[:5]
-                for i, order in enumerate(best_orders):
-                    if order.actual_outcome:
-                        print(
-                            f"{i + 1}. Order #{order.id}: {order.dish.value} - {order.actual_outcome['description']} ({order.actual_outcome['satisfaction']}%)")
-
-                input("\nPress ENTER to exit...")
-
-            def run_game(self):
-                if not self.tutorial_shown:
-                    self.show_tutorial()
-
-                game_running = True
-
-                while game_running:
-                    # Start day with planning phase
-                    message = self.advance_day()
+                if ready_to_proceed:
+                    return True
+                else:
+                    print("You must prepare all orders before proceeding.")
+                    input("Press ENTER to continue...")
+            elif command == 't':
+                if self.update_time():
+                    input("Press ENTER to continue...")
+            elif command.startswith('p'):
+                try:
+                    order_idx = int(command[1:]) - 1
+                    success, message = self.prepare_order(order_idx)
                     print(message)
+                    input("Press ENTER to continue...")
+                except (ValueError, IndexError):
+                    print("Invalid command format. Use p# to prepare an order.")
+                    input("Press ENTER to continue...")
+            elif command.startswith('v'):
+                try:
+                    order_idx = int(command[1:]) - 1
+                    if 0 <= order_idx < len(self.active_orders):
+                        print("\n" + self.active_orders[order_idx].get_details())
+                    else:
+                        print("Invalid order index.")
+                    input("Press ENTER to continue...")
+                except (ValueError, IndexError):
+                    print("Invalid command format. Use v# to view an order.")
+                    input("Press ENTER to continue...")
+            else:
+                print("Invalid command.")
+                input("Press ENTER to continue...")
 
-                    # Check for game over
-                    game_over, reason = self.check_game_over()
-                    if game_over:
-                        print(reason)
-                        input("Press ENTER to continue...")
-                        break
+    def run_delivery_phase(self):
+        self.current_phase = "Delivery"
 
-                    # Planning Phase
-                    if not self.run_planning_phase():
-                        break
+        while True:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(self.get_status())
 
-                    # Execution Phase
-                    if not self.run_execution_phase():
-                        break
+            print("\n===== ACTIVE ORDERS =====")
+            if not self.active_orders:
+                print("No active orders. All orders have been delivered!")
+                input("Press ENTER to continue to the next day...")
+                return True
+            else:
+                for i, order in enumerate(self.active_orders):
+                    print(f"[{i + 1}] {order}")
 
-                    # Delivery Phase
-                    if not self.run_delivery_phase():
-                        break
+            print("\n===== TIMELINES =====")
+            for timeline, orders in sorted(self.timelines.items()):
+                if orders:
+                    order_ids = [str(order.id) for order in orders]
+                    print(f"Timeline {timeline}: Orders #{', #'.join(order_ids)}")
 
-                self.show_game_summary()
+            print("\n===== DELIVERY PHASE COMMANDS =====")
+            print("[d#] Deliver order # (e.g., d1)")
+            print("[v#] View order details # (e.g., v1)")
+            print("[n] End day and proceed to next day")
+            print("[q] Quit game")
+
+            command = input("\nEnter command: ").strip().lower()
+
+            if command == 'q':
+                if input("Are you sure you want to quit? (y/n): ").lower() == 'y':
+                    return False
+            elif command == 'n':
+                if self.active_orders:
+                    if input("You still have active orders. Are you sure you want to end the day? (y/n): ").lower() == 'y':
+                        # Failed delivery penalty
+                        for order in self.active_orders:
+                            self.customer_satisfaction = max(0, self.customer_satisfaction - 3)
+
+                        self.active_orders = []
+                        self.timelines = defaultdict(list)
+                        return True
+                else:
+                    return True
+            elif command.startswith('d'):
+                try:
+                    order_idx = int(command[1:]) - 1
+                    success, message = self.deliver_order(order_idx)
+                    print(message)
+                    input("Press ENTER to continue...")
+                except (ValueError, IndexError):
+                    print("Invalid command format. Use d# to deliver an order.")
+                    input("Press ENTER to continue...")
+            elif command.startswith('v'):
+                try:
+                    order_idx = int(command[1:]) - 1
+                    if 0 <= order_idx < len(self.active_orders):
+                        print("\n" + self.active_orders[order_idx].get_details())
+                    else:
+                        print("Invalid order index.")
+                    input("Press ENTER to continue...")
+                except (ValueError, IndexError):
+                    print("Invalid command format. Use v# to view an order.")
+                    input("Press ENTER to continue...")
+            else:
+                print("Invalid command.")
+                input("Press ENTER to continue...")
+
+    def show_game_summary(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print("\n===== KUANTUM KITCHEN SUMMARY =====")
+        print(f"Days Survived: {self.day}")
+        print(f"Final Score: {self.score}")
+        print(f"Customer Satisfaction: {self.customer_satisfaction}%")
+        print(f"Reality Stability: {self.reality_stability}%")
+        print(f"Orders Completed: {len(self.completed_orders)}")
+        print(f"Orders Failed: {len(self.failed_orders)}")
+
+        print("\nTop 5 Best Orders:")
+        best_orders = sorted(self.completed_orders,
+                             key=lambda o: o.actual_outcome["satisfaction"] if o.actual_outcome else 0,
+                             reverse=True)[:5]
+        for i, order in enumerate(best_orders):
+            if order.actual_outcome:
+                print(f"{i + 1}. Order #{order.id}: {order.dish.value} - {order.actual_outcome['description']} ({order.actual_outcome['satisfaction']}%)")
+
+        input("\nPress ENTER to exit...")
+
+    def run_game(self):
+        if not self.tutorial_shown:
+            self.show_tutorial()
+
+        game_running = True
+
+        while game_running:
+            # Start day with planning phase
+            message = self.advance_day()
+            print(message)
+
+            # Check for game over
+            game_over, reason = self.check_game_over()
+            if game_over:
+                print(reason)
+                input("Press ENTER to continue...")
+                break
+
+            # Planning Phase
+            if not self.run_planning_phase():
+                break
+
+            # Execution Phase
+            if not self.run_execution_phase():
+                break
+
+            # Delivery Phase
+            if not self.run_delivery_phase():
+                break
+
+        self.show_game_summary()
 
 
 def main():
