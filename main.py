@@ -930,31 +930,30 @@ class KuantumKitchen:
         if not self.tutorial_shown:
             self.show_tutorial()
 
-        game_running = True
-
-        while game_running:
-            # Start day with planning phase
+        # Run the game for 7 days maximum
+        while self.day <= 7:
             message = self.advance_day()
             print(message)
 
-            # Check for game over
+            # Check for game over conditions (loss)
             game_over, reason = self.check_game_over()
             if game_over:
                 print(reason)
                 input("Press ENTER to continue...")
                 break
 
-            # Planning Phase
+            # Run phases of the day
             if not self.run_planning_phase():
                 break
-
-            # Execution Phase
             if not self.run_execution_phase():
                 break
-
-            # Delivery Phase
             if not self.run_delivery_phase():
                 break
+
+        # Check if the player survived all 7 days (win)
+        if self.day > 7:
+            print("Congratulations! You have survived 7 days in Kuantum Kitchen!")
+            input("Press ENTER to continue...")
 
         self.show_game_summary()
 
